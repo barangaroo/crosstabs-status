@@ -4,19 +4,52 @@ repo: crosstabs-status
 assignees:
   - barangaroo
 
+# Preserve every incident issue, including short outages, so the public history
+# remains useful as release-certification evidence.
+skipDeleteIssues: true
+
 sites:
   - name: Crosstabs API health
+    slug: api-health
     url: https://www.crosstabs.com/api/health
     maxResponseTime: 5000
     expectedStatusCodes:
       - 200
+
+  - name: Crosstabs MCP initialize
+    slug: mcp-initialize
+    url: https://mcp.crosstabs.com/mcp
+    method: POST
+    headers:
+      - "Accept: application/json, text/event-stream"
+      - "Content-Type: application/json"
+      - "MCP-Protocol-Version: 2025-11-25"
+    body: '{"jsonrpc":"2.0","id":"upptime-initialize","method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"crosstabs-status","version":"1.0"}}}'
+    maxResponseTime: 5000
+    expectedStatusCodes:
+      - 200
+    __dangerous__body_down_if_text_missing: '"name":"crosstabs-remote"'
+
+  - name: Crosstabs public MCP catalog
+    slug: mcp-public-catalog
+    url: https://mcp.crosstabs.com/mcp
+    method: POST
+    headers:
+      - "Accept: application/json, text/event-stream"
+      - "Content-Type: application/json"
+      - "MCP-Protocol-Version: 2025-11-25"
+    body: '{"jsonrpc":"2.0","id":"upptime-tools","method":"tools/list","params":{}}'
+    maxResponseTime: 5000
+    expectedStatusCodes:
+      - 200
+    __dangerous__body_down_if_text_missing: '"name":"render_crosstab"'
 
 status-website:
   baseUrl: /crosstabs-status
   logoUrl: https://www.crosstabs.com/icon
   name: Crosstabs status
   introTitle: "Independent uptime history for **Crosstabs**"
-  introMessage: This public monitor runs on GitHub infrastructure and probes the production health endpoint every five minutes. It contains operational metadata only—never respondent data.
+  introMessage: This public monitor runs on GitHub infrastructure and probes the production web health endpoint, MCP initialization handshake, and public MCP tool catalog every five minutes. It contains operational metadata only—never respondent data.
   navbar:
     - title: Status
       href: /crosstabs-status
