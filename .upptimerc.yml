@@ -44,12 +44,40 @@ sites:
       - 200
     __dangerous__body_down_if_text_missing: '"name":"render_crosstab"'
 
+  - name: Crosstabs rich MCP result
+    slug: mcp-rich-result
+    url: https://mcp.crosstabs.com/mcp
+    method: POST
+    headers:
+      - "Accept: application/json, text/event-stream"
+      - "Content-Type: application/json"
+      - "MCP-Protocol-Version: 2025-11-25"
+    body: '{"jsonrpc":"2.0","id":"upptime-rich-result","method":"tools/call","params":{"name":"render_crosstab","arguments":{"observed":[[70,35],[30,65]],"rowLabels":["Recommend","Do not recommend"],"columnLabels":["Customers","Prospects"],"rowVariable":"Advocacy","columnVariable":"Audience","percentage":"column"}}}'
+    maxResponseTime: 5000
+    expectedStatusCodes:
+      - 200
+    __dangerous__body_down_if_text_missing: '"source":"caller_supplied_aggregate_matrix"'
+
+  - name: Crosstabs MCP widget resource
+    slug: mcp-widget-resource
+    url: https://mcp.crosstabs.com/mcp
+    method: POST
+    headers:
+      - "Accept: application/json, text/event-stream"
+      - "Content-Type: application/json"
+      - "MCP-Protocol-Version: 2025-11-25"
+    body: '{"jsonrpc":"2.0","id":"upptime-widget","method":"resources/read","params":{"uri":"ui://crosstabs/crosstab-v1.html"}}'
+    maxResponseTime: 5000
+    expectedStatusCodes:
+      - 200
+    __dangerous__body_down_if_text_missing: '"mimeType":"text/html;profile=mcp-app"'
+
 status-website:
   baseUrl: /crosstabs-status
   logoUrl: https://www.crosstabs.com/icon
   name: Crosstabs status
   introTitle: "Independent uptime history for **Crosstabs**"
-  introMessage: This public monitor runs on GitHub infrastructure and probes the production web health endpoint, MCP initialization handshake, and public MCP tool catalog every five minutes. It contains operational metadata only—never respondent data. A public synthetic alert drill proves bot creation, operator assignment, and recovery closure; human mobile-push receipt remains explicitly uncertified.
+  introMessage: This public monitor runs on GitHub infrastructure and probes the production web health endpoint, MCP initialization, public tool catalog, deterministic rich result, and MCP App widget resource every five minutes. Synthetic probes use one fixed aggregate matrix and never respondent data. A public alert drill proves bot creation, operator assignment, and recovery closure; human mobile-push receipt remains explicitly uncertified.
   navbar:
     - title: Status
       href: /crosstabs-status
