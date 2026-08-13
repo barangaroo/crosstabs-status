@@ -1,0 +1,61 @@
+name: Monitoring alert delivery drill
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: monitoring-alert-delivery-drill
+  cancel-in-progress: false
+
+jobs:
+  drill:
+    name: Open and resolve a synthetic alert
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open assigned drill issue
+        id: issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          payload="$(jq -n \
+            --arg run_url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            '{
+              title: "Synthetic monitoring alert delivery drill (not an outage)",
+              body: ("This is a controlled notification-path drill, not a Crosstabs outage. Production health and MCP checks remain unchanged.\n\nThe workflow opened and assigned this issue to exercise the GitHub Actions → assigned operator notification path. Human mobile-push receipt is **not** certified by this automation and must remain pending until the named operator confirms delivery on the intended device.\n\nWorkflow run: " + $run_url),
+              assignees: ["barangaroo"]
+            }')"
+          issue_number="$(gh api --method POST "repos/${GITHUB_REPOSITORY}/issues" \
+            --input - --jq '.number' <<< "${payload}")"
+          test -n "${issue_number}"
+          echo "number=${issue_number}" >> "${GITHUB_OUTPUT}"
+          echo "url=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/issues/${issue_number}" >> "${GITHUB_OUTPUT}"
+
+      - name: Allow notification delivery
+        run: sleep 60
+
+      - name: Record automated completion and close the drill
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ steps.issue.outputs.number }}
+        run: |
+          jq -n \
+            '{body: "The automated delivery-path drill completed. This issue records bot creation, operator assignment, and recovery closure only. Human mobile-push receipt remains unconfirmed."}' |
+            gh api --method POST "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" --input -
+          jq -n '{state: "closed", state_reason: "completed"}' |
+            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}" --input -
+
+      - name: Publish drill receipt
+        env:
+          ISSUE_URL: ${{ steps.issue.outputs.url }}
+        run: |
+          {
+            echo "### Monitoring alert delivery drill"
+            echo
+            echo "- Synthetic issue: ${ISSUE_URL}"
+            echo "- Outage declared: no"
+            echo "- Human mobile-push receipt certified: no"
+          } >> "${GITHUB_STEP_SUMMARY}"
