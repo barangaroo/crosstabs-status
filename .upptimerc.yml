@@ -10,7 +10,7 @@ skipDeleteIssues: true
 
 sites:
   - name: Crosstabs API health
-    slug: api-health
+    slug: crosstabs-api-health
     url: https://www.crosstabs.com/api/health
     maxResponseTime: 5000
     expectedStatusCodes:
