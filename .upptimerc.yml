@@ -16,6 +16,22 @@ sites:
     expectedStatusCodes:
       - 200
 
+  - name: Crosstabs headless surface status
+    slug: headless-surface-status
+    url: https://ai.crosstabs.com/api/headless-status
+    maxResponseTime: 5000
+    expectedStatusCodes:
+      - 200
+    __dangerous__body_down_if_text_missing: '"projectLifecycleToolCount":23'
+
+  - name: Crosstabs MCP OAuth resource discovery
+    slug: mcp-oauth-resource
+    url: https://mcp.crosstabs.com/.well-known/oauth-protected-resource/mcp
+    maxResponseTime: 5000
+    expectedStatusCodes:
+      - 200
+    __dangerous__body_down_if_text_missing: '"resource":"https://mcp.crosstabs.com/mcp"'
+
   - name: Crosstabs MCP initialize
     slug: mcp-initialize
     url: https://mcp.crosstabs.com/mcp
@@ -77,7 +93,7 @@ status-website:
   logoUrl: https://www.crosstabs.com/icon
   name: Crosstabs status
   introTitle: "Independent uptime history for **Crosstabs**"
-  introMessage: This public monitor runs on GitHub infrastructure and probes the production web health endpoint, MCP initialization, public tool catalog, deterministic rich result, and MCP App widget resource every five minutes. Synthetic probes use one fixed aggregate matrix and never respondent data. A public alert drill proves bot creation, operator assignment, and recovery closure; human mobile-push receipt remains explicitly uncertified.
+  introMessage: This public monitor runs on GitHub infrastructure and probes production web health, the AI headless-surface contract, MCP OAuth resource discovery, MCP initialization, the public tool catalog, a deterministic rich result, and the MCP App widget resource every five minutes. Synthetic probes use one fixed aggregate matrix and never respondent data. A public alert drill proves bot creation, operator assignment, and recovery closure; human mobile-push receipt remains explicitly uncertified.
   navbar:
     - title: Status
       href: /crosstabs-status
