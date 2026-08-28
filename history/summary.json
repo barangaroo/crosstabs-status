@@ -40,19 +40,19 @@
     "url": "https://mcp.crosstabs.com/.well-known/oauth-protected-resource/mcp",
     "icon": "https://icons.duckduckgo.com/ip3/mcp.crosstabs.com.ico",
     "slug": "mcp-oauth-resource",
-    "status": "down",
-    "uptime": "100.00%",
-    "uptimeDay": "99.99%",
-    "uptimeWeek": "100.00%",
-    "uptimeMonth": "100.00%",
-    "uptimeYear": "100.00%",
-    "time": 517,
-    "timeDay": 482,
-    "timeWeek": 531,
-    "timeMonth": 517,
-    "timeYear": 517,
+    "status": "up",
+    "uptime": "99.92%",
+    "uptimeDay": "98.82%",
+    "uptimeWeek": "99.83%",
+    "uptimeMonth": "99.92%",
+    "uptimeYear": "99.92%",
+    "time": 504,
+    "timeDay": 399,
+    "timeWeek": 505,
+    "timeMonth": 504,
+    "timeYear": 504,
     "dailyMinutesDown": {
-      "2026-08-28": 0
+      "2026-08-28": 17
     }
   },
   {
