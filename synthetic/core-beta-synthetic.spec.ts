@@ -9,8 +9,19 @@ type SyntheticIdentity = {
   sourceRevision: string;
 };
 
+function expectedProductionIdentity(): SyntheticIdentity {
+  const deploymentId = process.env.CORE_EXPECTED_DEPLOYMENT_ID;
+  const sourceRevision = process.env.CORE_EXPECTED_SOURCE_SHA;
+  if (!deploymentId || !/^dpl_[A-Za-z0-9]+$/u.test(deploymentId) ||
+      !sourceRevision || !/^[a-f0-9]{40}$/u.test(sourceRevision)) {
+    throw new Error("The browser journey requires an exact expected production identity.");
+  }
+  return { deploymentId, sourceRevision };
+}
+
 async function exactProductionIdentity(
   request: APIRequestContext,
+  expected: SyntheticIdentity,
 ): Promise<SyntheticIdentity> {
   const health = await request.get("/api/health");
   expect(health.status()).toBe(200);
@@ -33,14 +44,20 @@ async function exactProductionIdentity(
   });
   expect(report.build?.deploymentId).toMatch(/^dpl_[A-Za-z0-9]+$/u);
   expect(report.build?.sourceRevision).toMatch(/^[a-f0-9]{40}$/u);
-  return report.build as SyntheticIdentity;
+  const identity = {
+    deploymentId: report.build?.deploymentId,
+    sourceRevision: report.build?.sourceRevision,
+  };
+  expect(identity).toEqual(expected);
+  return expected;
 }
 
 test("core beta synthetic journey computes, persists, reloads, and exports a crosstab", async ({
   page,
   request,
 }) => {
-  const initialIdentity = await exactProductionIdentity(request);
+  const expectedIdentity = expectedProductionIdentity();
+  const initialIdentity = await exactProductionIdentity(request, expectedIdentity);
 
   await page.goto("/");
   await page.getByRole("button", { name: "Try sample dataset" }).first().click();
@@ -68,5 +85,5 @@ test("core beta synthetic journey computes, persists, reloads, and exports a cro
   await page.getByRole("menuitem", { name: "Data table CSV" }).click();
   expect((await download).suggestedFilename()).toMatch(/\.csv$/u);
 
-  expect(await exactProductionIdentity(request)).toEqual(initialIdentity);
+  expect(await exactProductionIdentity(request, expectedIdentity)).toEqual(initialIdentity);
 });

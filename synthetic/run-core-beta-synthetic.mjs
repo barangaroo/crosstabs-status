@@ -88,11 +88,16 @@ async function productionIdentity(expected, fetchImpl) {
   return validateHealth(JSON.parse(raw), expected);
 }
 
-function executePlaywright() {
+function executePlaywright(expectedIdentity) {
   return new Promise((resolvePromise) => {
     const child = spawn(process.execPath, [PLAYWRIGHT_CLI, "test", `--config=${PLAYWRIGHT_CONFIG}`], {
       cwd: ROOT,
-      env: { ...process.env, PLAYWRIGHT_BASE_URL: "https://www.crosstabs.com" },
+      env: {
+        ...process.env,
+        CORE_EXPECTED_DEPLOYMENT_ID: expectedIdentity.deploymentId,
+        CORE_EXPECTED_SOURCE_SHA: expectedIdentity.sourceRevision,
+        PLAYWRIGHT_BASE_URL: "https://www.crosstabs.com",
+      },
       stdio: "inherit",
     });
     child.once("error", () => resolvePromise(1));
@@ -118,11 +123,15 @@ export async function runSynthetic({
     throw new Error("The monitored journey bytes do not match the activated contract digest.");
   }
   const started = now();
+  const expectedIdentity = {
+    sourceRevision: expected.sourceRevision,
+    deploymentId: expected.deploymentId,
+  };
   let outcome = "failed";
   let errorCode = "synthetic_failed";
   try {
     const before = await productionIdentity(expected, fetchImpl);
-    const exitCode = await execute();
+    const exitCode = await execute(expectedIdentity);
     if (exitCode !== 0) throw new Error("Synthetic browser journey failed.");
     const after = await productionIdentity(expected, fetchImpl);
     if (before.sourceRevision !== after.sourceRevision || before.deploymentId !== after.deploymentId) {

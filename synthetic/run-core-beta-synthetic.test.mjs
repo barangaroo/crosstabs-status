@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -68,6 +69,57 @@ test("health must bind the exact operational disabled-AI release", () => {
   assert.throws(() => validateHealth(health({
     releasePosture: { hostedAi: "enabled", basis: "build-time-release-flag" },
   }), configuration()), /does not match/u);
+});
+
+test("browser execution receives the exact identity validated by the wrapper", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "crosstabs-synthetic-test-"));
+  const outputPath = join(directory, "browser-identity.json");
+  let browserIdentity;
+  const evidence = await runSynthetic({
+    config: configuration(),
+    outputPath,
+    specSource: SPEC,
+    fetchImpl: async () => response(health()),
+    execute: async (expectedIdentity) => {
+      browserIdentity = expectedIdentity;
+      return 0;
+    },
+    now: () => new Date("2026-08-30T00:00:00.000Z"),
+  });
+
+  assert.equal(evidence.outcome, "passed");
+  assert.deepEqual(browserIdentity, {
+    sourceRevision: SOURCE,
+    deploymentId: DEPLOYMENT,
+  });
+});
+
+test("browser contract enforces the expected identity on both health checks", async () => {
+  const source = await readFile(
+    new URL("./core-beta-synthetic.spec.ts", import.meta.url),
+    "utf8",
+  );
+
+  assert.match(source, /CORE_EXPECTED_SOURCE_SHA/u);
+  assert.match(source, /CORE_EXPECTED_DEPLOYMENT_ID/u);
+  assert.match(source, /expect\(identity\)\.toEqual\(expected\)/u);
+  assert.equal(
+    source.match(/exactProductionIdentity\(request, expectedIdentity\)/gu)?.length,
+    2,
+  );
+});
+
+test("committed lifecycle configuration binds the exact browser contract bytes", async () => {
+  const [configurationSource, contractSource] = await Promise.all([
+    readFile(new URL("./expected-production.json", import.meta.url), "utf8"),
+    readFile(new URL("./core-beta-synthetic.spec.ts", import.meta.url), "utf8"),
+  ]);
+  const committed = JSON.parse(configurationSource);
+
+  assert.equal(
+    committed.contractSha256,
+    createHash("sha256").update(contractSource).digest("hex"),
+  );
 });
 
 test("passing evidence is bounded, content-free, and identity-stable", async () => {
