@@ -1,0 +1,12 @@
+{
+  "name": "crosstabs-core-beta-synthetic",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test run-core-beta-synthetic.test.mjs",
+    "synthetic": "node run-core-beta-synthetic.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1"
+  }
+}
