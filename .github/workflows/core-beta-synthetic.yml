@@ -1,0 +1,41 @@
+name: Core beta synthetic
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/core-beta-synthetic.yml"
+      - "synthetic/**"
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: core-beta-synthetic
+  cancel-in-progress: false
+
+jobs:
+  core-beta-synthetic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout the public monitor contract
+        uses: actions/checkout@d17a503e288d68ac207f43a3b0b30a657939cb13745169646c85c896175b7900 # v6.0.2
+
+      - name: Set up pinned Node
+        uses: actions/setup-node@7f5474ce29bf0dbdda451c45fc3e6dea65abfbbe1df98d51d9f4d0d29a599875 # v6.3.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: synthetic/package-lock.json
+
+      - name: Install the pinned synthetic runner
+        run: npm ci --prefix synthetic
+
+      - name: Install Chromium
+        run: npm --prefix synthetic exec playwright install --with-deps chromium
+
+      - name: Run the content-free Core journey
+        run: npm test --prefix synthetic
