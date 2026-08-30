@@ -1,0 +1,130 @@
+name: Core beta exact-identity synthetic
+
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: core-beta-exact-identity-synthetic
+  cancel-in-progress: false
+
+jobs:
+  configuration:
+    name: Read committed production identity
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      active: ${{ steps.config.outputs.active }}
+      source_sha: ${{ steps.config.outputs.source_sha }}
+      deployment_id: ${{ steps.config.outputs.deployment_id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate committed monitor lifecycle
+        id: config
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync, readFileSync } from "node:fs";
+          import { validateConfiguration } from "./synthetic/run-core-beta-synthetic.mjs";
+          const value = JSON.parse(readFileSync("./synthetic/expected-production.json", "utf8"));
+          validateConfiguration(value, { requireActive: false });
+          const active = value.status === "active";
+          appendFileSync(process.env.GITHUB_OUTPUT, `active=${active}\n`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `source_sha=${active ? value.sourceRevision : ""}\n`);
+          appendFileSync(process.env.GITHUB_OUTPUT, `deployment_id=${active ? value.deploymentId : ""}\n`);
+          NODE
+
+  synthetic:
+    name: Run deterministic sample journey
+    needs: configuration
+    if: ${{ needs.configuration.outputs.active == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: synthetic/package-lock.json
+
+      - name: Install isolated locked monitor
+        run: npm ci --ignore-scripts --prefix synthetic
+
+      - name: Verify monitor contracts
+        run: npm test --prefix synthetic
+
+      - name: Install exact Chromium
+        run: ./synthetic/node_modules/.bin/playwright install --with-deps chromium
+
+      - name: Run exact-identity journey
+        env:
+          CORE_BETA_SYNTHETIC_EVIDENCE_PATH: ${{ runner.temp }}/core-beta-synthetic.json
+        run: npm run synthetic --prefix synthetic
+
+      - name: Retain bounded synthetic receipt
+        id: evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: core-beta-synthetic-${{ needs.configuration.outputs.source_sha }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/core-beta-synthetic.json
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 9
+          overwrite: false
+          include-hidden-files: false
+
+      - name: Publish bounded receipt locator
+        if: ${{ always() && steps.evidence.outcome == 'success' }}
+        env:
+          ARTIFACT_DIGEST: ${{ steps.evidence.outputs.artifact-digest }}
+          DEPLOYMENT_ID: ${{ needs.configuration.outputs.deployment_id }}
+          SOURCE_SHA: ${{ needs.configuration.outputs.source_sha }}
+        run: |
+          {
+            echo "### Core beta exact-identity synthetic"
+            echo
+            echo "- Source SHA: ${SOURCE_SHA}"
+            echo "- Deployment ID: ${DEPLOYMENT_ID}"
+            echo "- Artifact SHA-256: ${ARTIFACT_DIGEST}"
+            echo "- Raw respondent or user content retained: no"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  incident:
+    name: Open redacted synthetic incident
+    needs: [configuration, synthetic]
+    if: ${{ always() && needs.configuration.outputs.active == 'true' && needs.synthetic.result == 'failure' }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update fixed incident
+        env:
+          DEPLOYMENT_ID: ${{ needs.configuration.outputs.deployment_id }}
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ needs.configuration.outputs.source_sha }}
+        shell: bash
+        run: |
+          run_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          issue_number="$(gh issue list --repo "${GITHUB_REPOSITORY}" --state open \
+            --search 'Core beta synthetic failed in:title' --json number --jq '.[0].number // empty')"
+          body="The deterministic sample journey failed for source ${SOURCE_SHA} and deployment ${DEPLOYMENT_ID}. No response body, browser capture, credential, or user data was retained. Run: ${run_url}"
+          if [[ -n "${issue_number}" ]]; then
+            gh issue comment "${issue_number}" --repo "${GITHUB_REPOSITORY}" --body "${body}"
+          else
+            gh issue create --repo "${GITHUB_REPOSITORY}" \
+              --title "Core beta synthetic failed" --body "${body}" --assignee barangaroo
+          fi
