@@ -22,37 +22,40 @@
     "url": "https://ai.crosstabs.com/api/headless-status",
     "icon": "https://icons.duckduckgo.com/ip3/ai.crosstabs.com.ico",
     "slug": "headless-surface-status",
-    "status": "up",
+    "status": "down",
     "uptime": "100.00%",
-    "uptimeDay": "100.00%",
-    "uptimeWeek": "100.00%",
+    "uptimeDay": "99.94%",
+    "uptimeWeek": "99.99%",
     "uptimeMonth": "100.00%",
     "uptimeYear": "100.00%",
-    "time": 278,
-    "timeDay": 294,
-    "timeWeek": 421,
-    "timeMonth": 278,
-    "timeYear": 278,
-    "dailyMinutesDown": {}
+    "time": 267,
+    "timeDay": 173,
+    "timeWeek": 375,
+    "timeMonth": 267,
+    "timeYear": 267,
+    "dailyMinutesDown": {
+      "2026-09-02": 1
+    }
   },
   {
     "name": "Crosstabs MCP OAuth resource discovery",
     "url": "https://mcp.crosstabs.com/.well-known/oauth-protected-resource/mcp",
     "icon": "https://icons.duckduckgo.com/ip3/mcp.crosstabs.com.ico",
     "slug": "mcp-oauth-resource",
-    "status": "up",
+    "status": "down",
     "uptime": "99.94%",
-    "uptimeDay": "100.00%",
+    "uptimeDay": "99.96%",
     "uptimeWeek": "99.83%",
     "uptimeMonth": "99.94%",
     "uptimeYear": "99.94%",
-    "time": 522,
-    "timeDay": 373,
-    "timeWeek": 576,
-    "timeMonth": 522,
-    "timeYear": 522,
+    "time": 502,
+    "timeDay": 233,
+    "timeWeek": 523,
+    "timeMonth": 502,
+    "timeYear": 502,
     "dailyMinutesDown": {
-      "2026-08-28": 17
+      "2026-08-28": 17,
+      "2026-09-02": 1
     }
   },
   {
@@ -60,18 +63,20 @@
     "url": "https://mcp.crosstabs.com/mcp",
     "icon": "https://icons.duckduckgo.com/ip3/mcp.crosstabs.com.ico",
     "slug": "mcp-initialize",
-    "status": "up",
+    "status": "down",
     "uptime": "100.00%",
-    "uptimeDay": "100.00%",
+    "uptimeDay": "99.98%",
     "uptimeWeek": "100.00%",
     "uptimeMonth": "100.00%",
     "uptimeYear": "100.00%",
-    "time": 591,
-    "timeDay": 977,
-    "timeWeek": 902,
-    "timeMonth": 591,
-    "timeYear": 591,
-    "dailyMinutesDown": {}
+    "time": 572,
+    "timeDay": 542,
+    "timeWeek": 803,
+    "timeMonth": 572,
+    "timeYear": 572,
+    "dailyMinutesDown": {
+      "2026-09-02": 0
+    }
   },
   {
     "name": "Crosstabs public MCP catalog",
@@ -96,18 +101,20 @@
     "url": "https://mcp.crosstabs.com/mcp",
     "icon": "https://icons.duckduckgo.com/ip3/mcp.crosstabs.com.ico",
     "slug": "mcp-rich-result",
-    "status": "up",
+    "status": "down",
     "uptime": "100.00%",
-    "uptimeDay": "100.00%",
+    "uptimeDay": "99.99%",
     "uptimeWeek": "100.00%",
     "uptimeMonth": "100.00%",
     "uptimeYear": "100.00%",
-    "time": 191,
-    "timeDay": 298,
-    "timeWeek": 232,
-    "timeMonth": 191,
-    "timeYear": 191,
-    "dailyMinutesDown": {}
+    "time": 190,
+    "timeDay": 231,
+    "timeWeek": 224,
+    "timeMonth": 190,
+    "timeYear": 190,
+    "dailyMinutesDown": {
+      "2026-09-02": 0
+    }
   },
   {
     "name": "Crosstabs MCP widget resource",
